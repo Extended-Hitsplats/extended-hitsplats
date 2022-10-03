@@ -29,6 +29,8 @@ import com.extendedhitsplats.ExtendedHitsplatsConfig;
 import com.extendedhitsplats.ExtendedHitsplatsPlugin;
 import net.runelite.api.Client;
 import net.runelite.api.Player;
+import net.runelite.api.events.HitsplatApplied;
+import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -38,9 +40,7 @@ import javax.inject.Inject;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.HashMap;
-import java.util.Objects;
-
+import java.util.*;
 
 
 import net.runelite.api.Client;
@@ -55,6 +55,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
 public class ExtendedHitsplatsOverlay extends Overlay
@@ -76,7 +77,10 @@ public class ExtendedHitsplatsOverlay extends Overlay
     @Override
     public Dimension render(Graphics2D graphics)
     {
-
+        List<HitsplatApplied> hitsplatAppliedList = ExtendedHitsplatsPlugin.appliedHitsplatList;
+        if (hitsplatAppliedList.size() == 0){
+            return null;
+        }
         return null;
     }
 
