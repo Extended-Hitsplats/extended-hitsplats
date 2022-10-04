@@ -27,10 +27,12 @@ package com.extendedhitsplats.overlays;
 
 import com.extendedhitsplats.ExtendedHitsplatsConfig;
 import com.extendedhitsplats.ExtendedHitsplatsPlugin;
+import com.extendedhitsplats.utils.BufferedImages;
 import net.runelite.api.Client;
 import net.runelite.api.Player;
 import net.runelite.api.events.HitsplatApplied;
 import net.runelite.client.eventbus.EventBus;
+import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -81,7 +83,21 @@ public class ExtendedHitsplatsOverlay extends Overlay
         if (hitsplatAppliedList.size() == 0){
             return null;
         }
+        for (HitsplatApplied hitsplatApplied : hitsplatAppliedList){
+            BufferedImage hitsplatImage = drawHitsplat(hitsplatApplied.getHitsplat().getHitsplatType(), hitsplatApplied.getHitsplat().getAmount());
+            OverlayUtil.renderActorOverlayImage(graphics, hitsplatApplied.getActor(), hitsplatImage, null, 1);
+        }
+
         return null;
+    }
+
+    private BufferedImage drawHitsplat(int hitsplat_type, int damage){
+        BufferedImage bi = BufferedImages.ALT_CHARGE_HITSPLAT;
+        Graphics g = bi.getGraphics();
+        g.setFont(FontManager.getRunescapeFont());
+        g.drawString(String.valueOf(damage), bi.getWidth()/2, bi.getHeight()/2);
+        g.dispose();
+        return bi;
     }
 
 

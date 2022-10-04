@@ -61,6 +61,9 @@ public class ExtendedHitsplatsPlugin extends Plugin
 	@Subscribe
 	public void onClientTick(ClientTick clientTick){
 		int gameCycle = client.getGameCycle();
+		if (appliedHitsplatList == null){
+			return;
+		}
 		if (appliedHitsplatList.size() == 0){
 			return;
 		}
