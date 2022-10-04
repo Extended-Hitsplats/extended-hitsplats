@@ -27,9 +27,10 @@ package com.extendedhitsplats.overlays;
 
 import com.extendedhitsplats.ExtendedHitsplatsConfig;
 import com.extendedhitsplats.ExtendedHitsplatsPlugin;
-import com.extendedhitsplats.utils.BufferedImages;
+import com.extendedhitsplats.utils.Icons;
 import net.runelite.api.Client;
 import net.runelite.api.events.HitsplatApplied;
+import net.runelite.api.HitsplatID;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.*;
 
@@ -49,7 +50,7 @@ public class ExtendedHitsplatsOverlay extends Overlay
     private ExtendedHitsplatsOverlay(Client client, ExtendedHitsplatsPlugin plugin, ExtendedHitsplatsConfig config)
     {
         setPosition(OverlayPosition.DYNAMIC);
-        setPriority(OverlayPriority.HIGHEST);
+        setPriority(OverlayPriority.NONE);
         setLayer(OverlayLayer.ABOVE_SCENE);
         this.client = client;
         this.plugin = plugin;
@@ -72,18 +73,99 @@ public class ExtendedHitsplatsOverlay extends Overlay
     }
 
     private BufferedImage drawHitsplat(int hitsplat_type, int damage){
-        BufferedImage bi = BufferedImages.CORRUPTION_HITSPLAT;
+        ImageIcon hitIcon = null;
+        switch (hitsplat_type){
+            case HitsplatID.POISON:
+                hitIcon = Icons.POISON_HITSPLAT;
+                break;
+            case HitsplatID.BLOCK_ME:
+                hitIcon = Icons.SELF_MISS_HITSPLAT;
+                break;
+            case HitsplatID.BLOCK_OTHER:
+                hitIcon = Icons.OTHER_MISS_HITSPLAT;
+                break;
+            case HitsplatID.DAMAGE_MAX_ME:
+                hitIcon = Icons.MAX_HITSPLAT;
+                break;
+            case HitsplatID.DAMAGE_ME:
+                hitIcon = Icons.SELF_DAMAGE_HITSPLAT;
+                break;
+            case HitsplatID.DAMAGE_MAX_ME_CYAN:
+                hitIcon = Icons.MAX_SHIELD_HITSPLAT;
+                break;
+            case HitsplatID.DAMAGE_MAX_ME_ORANGE:
+                hitIcon = Icons.MAX_ARMOUR_HITSPLAT;
+                break;
+            case HitsplatID.DAMAGE_MAX_ME_WHITE:
+                hitIcon = Icons.MAX_UNCHARGE_HITSPLAT;
+                break;
+            case HitsplatID.DAMAGE_MAX_ME_YELLOW:
+                hitIcon = Icons.MAX_CHARGE_HITSPLAT;
+                break;
+            case HitsplatID.DAMAGE_ME_CYAN:
+                hitIcon = Icons.SELF_SHIELD_HITSPLAT;
+                break;
+            case HitsplatID.DAMAGE_ME_ORANGE:
+                hitIcon = Icons.SELF_ARMOUR_HITSPLAT;
+                break;
+            case HitsplatID.DAMAGE_ME_WHITE:
+            case HitsplatID.DAMAGE_OTHER_WHITE:
+                hitIcon = Icons.SELF_UNCHARGE_HITSPLAT;
+                break;
+            case HitsplatID.DAMAGE_ME_YELLOW:
+                hitIcon = Icons.SELF_CHARGE_HITSPLAT;
+                break;
+            case HitsplatID.DAMAGE_OTHER:
+                hitIcon = Icons.OTHER_DAMAGE_HITSPLAT;
+                break;
+            case HitsplatID.DISEASE:
+                hitIcon = Icons.DISEASE_HITSPLAT;
+                break;
+            case HitsplatID.HEAL:
+                hitIcon = Icons.HEAL_HITSPLAT;
+                break;
+            case HitsplatID.VENOM:
+                hitIcon = Icons.VENOM_HITSPLAT;
+                break;
+            case HitsplatID.DAMAGE_OTHER_CYAN:
+                hitIcon = Icons.OTHER_SHIELD_HITSPLAT;
+                break;
+            case HitsplatID.DAMAGE_OTHER_ORANGE:
+                hitIcon = Icons.OTHER_ARMOUR_HITSPLAT;
+                break;
+            case HitsplatID.DAMAGE_OTHER_YELLOW:
+                hitIcon = Icons.OTHER_CHARGE_HITSPLAT;
+                break;
+            default:
+                // need ids for some of these, just throwing poise as default bc no one uses corruption
+                hitIcon = Icons.MAX_POISE_HITSPLAT;
+        }
+        BufferedImage bi = iconToBuffered(hitIcon);
         Graphics g = bi.getGraphics();
-        g.setFont(FontManager.getRunescapeBoldFont());
-//        g.drawString(String.valueOf(damage), bi.getWidth(), bi.getHeight());
+        bi = drawCenteredString(g, String.valueOf(damage), bi, FontManager.getRunescapeSmallFont());
         g.dispose();
         return bi;
     }
 
+    public BufferedImage drawCenteredString(Graphics g, String text, BufferedImage bi, Font font) {
+        FontMetrics metrics = g.getFontMetrics(font);
+        int x = (bi.getWidth() - metrics.stringWidth(text)) / 2;
+        int y = ((bi.getHeight() - metrics.getHeight()) / 2) + metrics.getAscent();
+        g.setFont(font);
+        // draw shadow
+        g.setColor(Color.black);
+        g.drawString(text, x+1, y+1);
+        // draw normal text
+        g.setColor(Color.white);
+        g.drawString(text, x, y);
+        return bi;
+    }
 
-    private BufferedImage iconToBuffered(ImageIcon icon, Integer width, Integer height){
+    private BufferedImage iconToBuffered(ImageIcon icon){
         // resize
         Image image = icon.getImage();
+        int height = icon.getIconHeight();
+        int width = icon.getIconWidth();
         Image tempImage = image.getScaledInstance(width, height,  java.awt.Image.SCALE_SMOOTH); // scale it the smooth way
         ImageIcon sizedImageIcon = new ImageIcon(tempImage);
 
