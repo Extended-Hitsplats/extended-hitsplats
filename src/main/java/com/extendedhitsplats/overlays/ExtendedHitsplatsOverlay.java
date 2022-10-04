@@ -65,8 +65,8 @@ public class ExtendedHitsplatsOverlay extends Overlay
             return null;
         }
         for (HitsplatApplied hitsplatApplied : hitsplatAppliedList){
-            BufferedImage hitsplatImage = drawHitsplat(hitsplatApplied.getHitsplat().getHitsplatType(), hitsplatApplied.getHitsplat().getAmount());
-            OverlayUtil.renderActorOverlayImage(graphics, hitsplatApplied.getActor(), hitsplatImage, null, hitsplatApplied.getActor().getLogicalHeight());
+            BufferedImage hitsplatImage = drawHitsplat(hitsplatApplied.getHitsplat().getHitsplatType(), hitsplatApplied.getHitsplat().getHitsplatType());
+            OverlayUtil.renderActorOverlayImage(graphics, hitsplatApplied.getActor(), hitsplatImage, null, hitsplatApplied.getActor().getLogicalHeight()*2);
         }
 
         return null;
@@ -136,9 +136,11 @@ public class ExtendedHitsplatsOverlay extends Overlay
             case HitsplatID.DAMAGE_OTHER_YELLOW:
                 hitIcon = Icons.OTHER_CHARGE_HITSPLAT;
                 break;
+            case 0:
+                hitIcon = Icons.CORRUPTION_HITSPLAT;
+                break;
             default:
-                // need ids for some of these, just throwing poise as default bc no one uses corruption
-                hitIcon = Icons.MAX_POISE_HITSPLAT;
+                hitIcon = Icons.OTHER_POISE_HITSPLAT;
         }
         BufferedImage bi = iconToBuffered(hitIcon);
         Graphics g = bi.getGraphics();
