@@ -68,17 +68,15 @@ public class ExtendedHitsplatsOverlay extends Overlay
 
         Map<Actor, ArrayList<Hitsplat>> actorListMap = new HashMap<>();
 
+        // organize hitsplats to occur under their respective actors
         for (HitsplatApplied hitsplatApplied : hitsplatAppliedList){
             Hitsplat hitsplat = hitsplatApplied.getHitsplat();
             Actor actor = hitsplatApplied.getActor();
-
             if (actorListMap.containsKey(actor)){
-                // key exists
                 ArrayList<Hitsplat> temp = actorListMap.get(actor);
                 temp.add(hitsplat);
                 actorListMap.put(actor, temp);
             } else {
-                // key doesn't exist
                 actorListMap.put(actor, new ArrayList<>(Arrays.asList(hitsplat)));
             }
         }
@@ -86,9 +84,27 @@ public class ExtendedHitsplatsOverlay extends Overlay
         for (Actor actor : actorListMap.keySet()){
             ArrayList<Hitsplat> hitsplats = actorListMap.get(actor);
             for (Hitsplat hitsplat : hitsplats){
+                int idx = hitsplats.indexOf(hitsplat);
+
                 BufferedImage hitsplatImage = drawHitsplat(hitsplat.getHitsplatType(), hitsplat.getAmount());
                 Point p = actor.getCanvasImageLocation(hitsplatImage, actor.getLogicalHeight()/2);
-                OverlayUtil.renderImageLocation(graphics, p, hitsplatImage);
+
+                int height = hitsplatImage.getHeight();
+                int width = hitsplatImage.getWidth();
+
+                if (idx == 0){
+                    OverlayUtil.renderImageLocation(graphics, new Point(p.getX(), p.getY()), hitsplatImage);
+                } else if (idx == 1) {
+                    OverlayUtil.renderImageLocation(graphics, new Point(p.getX(), p.getY()-(20)), hitsplatImage);
+                } else if (idx == 2) {
+                    OverlayUtil.renderImageLocation(graphics, new Point(p.getX()-20, p.getY()-(10)), hitsplatImage);
+                } else if (idx == 3) {
+                    OverlayUtil.renderImageLocation(graphics, new Point(p.getX()+20, p.getY()-(10)), hitsplatImage);
+                } else if (idx > 3) {
+                    // make some drawing algorithm here, should accept 255 positions
+//                    OverlayUtil.renderImageLocation(graphics, new Point(p.getX()+20, p.getY()-(10)), hitsplatImage);
+                }
+
             }
         }
 
@@ -96,7 +112,7 @@ public class ExtendedHitsplatsOverlay extends Overlay
     }
 
     private BufferedImage drawHitsplat(int hitsplat_type, int damage){
-        ImageIcon hitIcon = null;
+        ImageIcon hitIcon;
         switch (hitsplat_type){
             case HitsplatID.POISON:
                 hitIcon = Icons.POISON_HITSPLAT;
@@ -167,12 +183,12 @@ public class ExtendedHitsplatsOverlay extends Overlay
         }
         BufferedImage bi = iconToBuffered(hitIcon);
         Graphics g = bi.getGraphics();
-        bi = drawCenteredString(g, String.valueOf(damage), bi, FontManager.getRunescapeSmallFont());
+        bi = drawCenteredDamageNumbers(g, String.valueOf(damage), bi, FontManager.getRunescapeSmallFont());
         g.dispose();
         return bi;
     }
 
-    public BufferedImage drawCenteredString(Graphics g, String text, BufferedImage bi, Font font) {
+    public BufferedImage drawCenteredDamageNumbers(Graphics g, String text, BufferedImage bi, Font font) {
         FontMetrics metrics = g.getFontMetrics(font);
         int x = (bi.getWidth() - metrics.stringWidth(text)) / 2;
         int y = ((bi.getHeight() - metrics.getHeight()) / 2) + metrics.getAscent();
@@ -181,7 +197,7 @@ public class ExtendedHitsplatsOverlay extends Overlay
         g.setColor(Color.black);
         g.drawString(text, x+1, y+1);
         // draw normal text
-        g.setColor(Color.YELLOW);
+        g.setColor(Color.white);
         g.drawString(text, x, y);
         return bi;
     }
