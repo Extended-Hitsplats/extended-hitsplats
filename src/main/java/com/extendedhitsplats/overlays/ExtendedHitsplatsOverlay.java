@@ -29,36 +29,15 @@ import com.extendedhitsplats.ExtendedHitsplatsConfig;
 import com.extendedhitsplats.ExtendedHitsplatsPlugin;
 import com.extendedhitsplats.utils.BufferedImages;
 import net.runelite.api.Client;
-import net.runelite.api.Player;
 import net.runelite.api.events.HitsplatApplied;
-import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.ui.FontManager;
-import net.runelite.client.ui.overlay.Overlay;
-import net.runelite.client.ui.overlay.OverlayLayer;
-import net.runelite.client.ui.overlay.OverlayPosition;
-import net.runelite.client.ui.overlay.OverlayUtil;
+import net.runelite.client.ui.overlay.*;
 
 import javax.inject.Inject;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.*;
-
-
-import net.runelite.api.Client;
-import net.runelite.api.Player;
-import net.runelite.client.ui.overlay.Overlay;
-import net.runelite.client.ui.overlay.OverlayLayer;
-import net.runelite.client.ui.overlay.OverlayPosition;
-import net.runelite.client.ui.overlay.OverlayUtil;
-
-import javax.inject.Inject;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 
 public class ExtendedHitsplatsOverlay extends Overlay
 {
@@ -70,6 +49,7 @@ public class ExtendedHitsplatsOverlay extends Overlay
     private ExtendedHitsplatsOverlay(Client client, ExtendedHitsplatsPlugin plugin, ExtendedHitsplatsConfig config)
     {
         setPosition(OverlayPosition.DYNAMIC);
+        setPriority(OverlayPriority.HIGHEST);
         setLayer(OverlayLayer.ABOVE_SCENE);
         this.client = client;
         this.plugin = plugin;
@@ -85,17 +65,17 @@ public class ExtendedHitsplatsOverlay extends Overlay
         }
         for (HitsplatApplied hitsplatApplied : hitsplatAppliedList){
             BufferedImage hitsplatImage = drawHitsplat(hitsplatApplied.getHitsplat().getHitsplatType(), hitsplatApplied.getHitsplat().getAmount());
-            OverlayUtil.renderActorOverlayImage(graphics, hitsplatApplied.getActor(), hitsplatImage, null, 1);
+            OverlayUtil.renderActorOverlayImage(graphics, hitsplatApplied.getActor(), hitsplatImage, null, hitsplatApplied.getActor().getLogicalHeight());
         }
 
         return null;
     }
 
     private BufferedImage drawHitsplat(int hitsplat_type, int damage){
-        BufferedImage bi = BufferedImages.ALT_CHARGE_HITSPLAT;
+        BufferedImage bi = BufferedImages.CORRUPTION_HITSPLAT;
         Graphics g = bi.getGraphics();
-        g.setFont(FontManager.getRunescapeFont());
-        g.drawString(String.valueOf(damage), bi.getWidth()/2, bi.getHeight()/2);
+        g.setFont(FontManager.getRunescapeBoldFont());
+//        g.drawString(String.valueOf(damage), bi.getWidth(), bi.getHeight());
         g.dispose();
         return bi;
     }

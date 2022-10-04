@@ -3,11 +3,8 @@ package com.extendedhitsplats;
 import com.extendedhitsplats.overlays.ExtendedHitsplatsOverlay;
 import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Actor;
 import net.runelite.api.Client;
-import net.runelite.api.Hitsplat;
 import net.runelite.api.events.ClientTick;
-import net.runelite.api.events.GameTick;
 import net.runelite.api.events.HitsplatApplied;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -21,7 +18,7 @@ import java.util.List;
 
 @Slf4j
 @PluginDescriptor(
-	name = "Extended Hitsplats"
+	name = "Extended Hitsplats",description = "This plugin will allow you to see more than four hitsplats on a character",enabledByDefault = true
 )
 public class ExtendedHitsplatsPlugin extends Plugin
 {
@@ -69,7 +66,7 @@ public class ExtendedHitsplatsPlugin extends Plugin
 		}
 		for (HitsplatApplied hitsplatApplied : appliedHitsplatList){
 			int disappear = hitsplatApplied.getHitsplat().getDisappearsOnGameCycle();
-			if (gameCycle >= disappear){
+			if (gameCycle > disappear+50){
 				appliedHitsplatList.remove(hitsplatApplied);
 			}
 		}
