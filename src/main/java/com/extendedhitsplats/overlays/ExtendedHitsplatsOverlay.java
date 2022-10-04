@@ -28,9 +28,9 @@ package com.extendedhitsplats.overlays;
 import com.extendedhitsplats.ExtendedHitsplatsConfig;
 import com.extendedhitsplats.ExtendedHitsplatsPlugin;
 import com.extendedhitsplats.utils.Icons;
-import net.runelite.api.Client;
+import net.runelite.api.*;
+import net.runelite.api.Point;
 import net.runelite.api.events.HitsplatApplied;
-import net.runelite.api.HitsplatID;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.*;
 
@@ -38,6 +38,7 @@ import javax.inject.Inject;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.*;
 import java.util.List;
 
 public class ExtendedHitsplatsOverlay extends Overlay
@@ -50,8 +51,8 @@ public class ExtendedHitsplatsOverlay extends Overlay
     private ExtendedHitsplatsOverlay(Client client, ExtendedHitsplatsPlugin plugin, ExtendedHitsplatsConfig config)
     {
         setPosition(OverlayPosition.DYNAMIC);
-        setPriority(OverlayPriority.NONE);
-        setLayer(OverlayLayer.ABOVE_SCENE);
+        setPriority(OverlayPriority.HIGHEST);
+        setLayer(OverlayLayer.ALWAYS_ON_TOP);
         this.client = client;
         this.plugin = plugin;
         this.config = config;
@@ -64,9 +65,31 @@ public class ExtendedHitsplatsOverlay extends Overlay
         if (hitsplatAppliedList.size() == 0){
             return null;
         }
+
+        Map<Actor, ArrayList<Hitsplat>> actorListMap = new HashMap<>();
+
         for (HitsplatApplied hitsplatApplied : hitsplatAppliedList){
-            BufferedImage hitsplatImage = drawHitsplat(hitsplatApplied.getHitsplat().getHitsplatType(), hitsplatApplied.getHitsplat().getHitsplatType());
-            OverlayUtil.renderActorOverlayImage(graphics, hitsplatApplied.getActor(), hitsplatImage, null, hitsplatApplied.getActor().getLogicalHeight()*2);
+            Hitsplat hitsplat = hitsplatApplied.getHitsplat();
+            Actor actor = hitsplatApplied.getActor();
+
+            if (actorListMap.containsKey(actor)){
+                // key exists
+                ArrayList<Hitsplat> temp = actorListMap.get(actor);
+                temp.add(hitsplat);
+                actorListMap.put(actor, temp);
+            } else {
+                // key doesn't exist
+                actorListMap.put(actor, new ArrayList<>(Arrays.asList(hitsplat)));
+            }
+        }
+
+        for (Actor actor : actorListMap.keySet()){
+            ArrayList<Hitsplat> hitsplats = actorListMap.get(actor);
+            for (Hitsplat hitsplat : hitsplats){
+                BufferedImage hitsplatImage = drawHitsplat(hitsplat.getHitsplatType(), hitsplat.getAmount());
+                Point p = actor.getCanvasImageLocation(hitsplatImage, actor.getLogicalHeight()/2);
+                OverlayUtil.renderImageLocation(graphics, p, hitsplatImage);
+            }
         }
 
         return null;
@@ -158,20 +181,18 @@ public class ExtendedHitsplatsOverlay extends Overlay
         g.setColor(Color.black);
         g.drawString(text, x+1, y+1);
         // draw normal text
-        g.setColor(Color.white);
+        g.setColor(Color.YELLOW);
         g.drawString(text, x, y);
         return bi;
     }
 
     private BufferedImage iconToBuffered(ImageIcon icon){
-        // resize
         Image image = icon.getImage();
         int height = icon.getIconHeight();
         int width = icon.getIconWidth();
-        Image tempImage = image.getScaledInstance(width, height,  java.awt.Image.SCALE_SMOOTH); // scale it the smooth way
+        Image tempImage = image.getScaledInstance(width, height,  java.awt.Image.SCALE_SMOOTH);
         ImageIcon sizedImageIcon = new ImageIcon(tempImage);
 
-        // write to buffered
         BufferedImage bi = new BufferedImage(
                 sizedImageIcon.getIconWidth(),
                 sizedImageIcon.getIconHeight(),
