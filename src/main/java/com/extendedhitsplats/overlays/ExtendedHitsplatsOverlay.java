@@ -27,12 +27,14 @@ package com.extendedhitsplats.overlays;
 
 import com.extendedhitsplats.ExtendedHitsplatsConfig;
 import com.extendedhitsplats.ExtendedHitsplatsPlugin;
+import com.extendedhitsplats.points.SplatPoints;
 import com.extendedhitsplats.utils.Icons;
 import net.runelite.api.*;
 import net.runelite.api.Point;
 import net.runelite.api.events.HitsplatApplied;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.*;
+import org.apache.commons.lang3.ObjectUtils;
 
 import javax.inject.Inject;
 import javax.swing.*;
@@ -43,19 +45,19 @@ import java.util.List;
 
 public class ExtendedHitsplatsOverlay extends Overlay
 {
-    private final Client client;
     private final ExtendedHitsplatsPlugin plugin;
     private final ExtendedHitsplatsConfig config;
+    private final Client client;
 
     @Inject
-    private ExtendedHitsplatsOverlay(Client client, ExtendedHitsplatsPlugin plugin, ExtendedHitsplatsConfig config)
+    private ExtendedHitsplatsOverlay(ExtendedHitsplatsPlugin plugin, ExtendedHitsplatsConfig config, Client client)
     {
         setPosition(OverlayPosition.DYNAMIC);
         setPriority(OverlayPriority.HIGHEST);
         setLayer(OverlayLayer.ALWAYS_ON_TOP);
-        this.client = client;
         this.plugin = plugin;
         this.config = config;
+        this.client = client;
     }
 
     @Override
@@ -86,28 +88,21 @@ public class ExtendedHitsplatsOverlay extends Overlay
             for (Hitsplat hitsplat : hitsplats){
                 int idx = hitsplats.indexOf(hitsplat);
 
-                BufferedImage hitsplatImage = drawHitsplat(hitsplat.getHitsplatType(), hitsplat.getAmount());
-                Point p = actor.getCanvasImageLocation(hitsplatImage, actor.getLogicalHeight()/2);
-
-                int height = hitsplatImage.getHeight();
-                int width = hitsplatImage.getWidth();
-
-                if (idx == 0){
-                    OverlayUtil.renderImageLocation(graphics, new Point(p.getX(), p.getY()), hitsplatImage);
-                } else if (idx == 1) {
-                    OverlayUtil.renderImageLocation(graphics, new Point(p.getX(), p.getY()-(20)), hitsplatImage);
-                } else if (idx == 2) {
-                    OverlayUtil.renderImageLocation(graphics, new Point(p.getX()-20, p.getY()-(10)), hitsplatImage);
-                } else if (idx == 3) {
-                    OverlayUtil.renderImageLocation(graphics, new Point(p.getX()+20, p.getY()-(10)), hitsplatImage);
-                } else if (idx > 3) {
-                    // make some drawing algorithm here, should accept 255 positions
-//                    OverlayUtil.renderImageLocation(graphics, new Point(p.getX()+20, p.getY()-(10)), hitsplatImage);
+                if (idx > config.maxHitsplats()){
+                    continue;
                 }
 
+                BufferedImage hitsplatImage = drawHitsplat(hitsplat.getHitsplatType(), hitsplat.getAmount());
+                Point tPoint = actor.getCanvasImageLocation(hitsplatImage, actor.getLogicalHeight()/2);
+                if (tPoint == null){
+                    continue;
+                }
+                // adjust paint due to rounding
+                Point p = new Point(tPoint.getX()+1, tPoint.getY()-1);
+                Point k = SplatPoints.splatPoints.get(idx);
+                OverlayUtil.renderImageLocation(graphics, new Point(p.getX()+k.getX(), p.getY()+k.getY()), hitsplatImage);
             }
         }
-
         return null;
     }
 
