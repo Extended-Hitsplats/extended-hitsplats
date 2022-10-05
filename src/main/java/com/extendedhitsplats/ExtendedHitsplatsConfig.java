@@ -25,4 +25,13 @@ public interface ExtendedHitsplatsConfig extends Config
 	)
 	default boolean showZero(){return true;}
 
+
+	@ConfigItem(
+			position = 3,
+			keyName = "bigHitsplat",
+			name = "Single Big Hitsplat",
+			description = "Show one big hitsplat with all of the damage values for a target."
+	)
+	default boolean bigHitsplat(){return false;}
+
 }

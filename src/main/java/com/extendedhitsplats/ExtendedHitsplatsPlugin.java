@@ -93,7 +93,7 @@ public class ExtendedHitsplatsPlugin extends Plugin
 		}
 		for (HitsplatApplied hitsplatApplied : appliedHitsplatList){
 			int disappear = hitsplatApplied.getHitsplat().getDisappearsOnGameCycle();
-			if (gameCycle > disappear + 100){
+			if (gameCycle > disappear + 150){
 				appliedHitsplatList.remove(hitsplatApplied);
 			}
 		}

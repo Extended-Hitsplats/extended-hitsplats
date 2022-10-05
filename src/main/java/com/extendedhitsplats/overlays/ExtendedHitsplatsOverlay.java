@@ -85,17 +85,40 @@ public class ExtendedHitsplatsOverlay extends Overlay
 
         for (Actor actor : actorListMap.keySet()){
             ArrayList<Hitsplat> hitsplats = actorListMap.get(actor);
+
+            if (config.bigHitsplat()){
+                int damage = 0;
+                for (Hitsplat hitsplat : hitsplats){
+                    damage += hitsplat.getAmount();
+                }
+
+                if ((damage == 0) & (!config.showZero())){
+                    continue;
+                }
+
+                BufferedImage hitsplatImage = drawHitsplat(HitsplatID.DAMAGE_OTHER, damage);
+                Point cPoint = actor.getCanvasImageLocation(hitsplatImage, actor.getLogicalHeight()/2);
+
+                if (cPoint == null){
+                    continue;
+                }
+
+                Point p = new Point(cPoint.getX()+1, cPoint.getY()-1);
+                Point k = SplatPoints.splatPoints.get(0);
+                OverlayUtil.renderImageLocation(graphics, new Point(p.getX(), p.getY()), hitsplatImage);
+                continue;
+            }
+
             int missOffset = 0;
             for (Hitsplat hitsplat : hitsplats){
                 int idx = hitsplats.indexOf(hitsplat);
                 int position = idx-missOffset;
+                int damage = hitsplat.getAmount();
+                int hitsplatType = hitsplat.getHitsplatType();
 
                 if (position >= config.maxHitsplats()){
                     continue;
                 }
-
-                int damage = hitsplat.getAmount();
-                int hitsplatType = hitsplat.getHitsplatType();
 
                 if ((damage == 0) & (!config.showZero())){
                     missOffset += 1;
