@@ -85,21 +85,32 @@ public class ExtendedHitsplatsOverlay extends Overlay
 
         for (Actor actor : actorListMap.keySet()){
             ArrayList<Hitsplat> hitsplats = actorListMap.get(actor);
+            int missOffset = 0;
             for (Hitsplat hitsplat : hitsplats){
                 int idx = hitsplats.indexOf(hitsplat);
+                int position = idx-missOffset;
 
-                if (idx > config.maxHitsplats()){
+                if (position >= config.maxHitsplats()){
                     continue;
                 }
 
-                BufferedImage hitsplatImage = drawHitsplat(hitsplat.getHitsplatType(), hitsplat.getAmount());
-                Point tPoint = actor.getCanvasImageLocation(hitsplatImage, actor.getLogicalHeight()/2);
-                if (tPoint == null){
+                int damage = hitsplat.getAmount();
+                int hitsplatType = hitsplat.getHitsplatType();
+
+                if ((damage == 0) & (!config.showZero())){
+                    missOffset += 1;
                     continue;
                 }
-                // adjust paint due to rounding
-                Point p = new Point(tPoint.getX()+1, tPoint.getY()-1);
-                Point k = SplatPoints.splatPoints.get(idx);
+
+                BufferedImage hitsplatImage = drawHitsplat(hitsplatType, damage);
+                Point cPoint = actor.getCanvasImageLocation(hitsplatImage, actor.getLogicalHeight()/2);
+
+                if (cPoint == null){
+                    continue;
+                }
+
+                Point p = new Point(cPoint.getX()+1, cPoint.getY()-1);
+                Point k = SplatPoints.splatPoints.get(position);
                 OverlayUtil.renderImageLocation(graphics, new Point(p.getX()+k.getX(), p.getY()+k.getY()), hitsplatImage);
             }
         }
