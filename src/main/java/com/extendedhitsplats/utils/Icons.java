@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 
 public class Icons {
     private static final Class<?> PLUGIN_CLASS = ExtendedHitsplatsPlugin.class;
+    public static final ImageIcon BIG_HITSPLAT = new ImageIcon(ImageUtil.loadImageResource(PLUGIN_CLASS, "/com/extendedhitsplats/hitsplats/big_hitsplat.png"));
     public static final ImageIcon ALT_CHARGE_HITSPLAT = new ImageIcon(ImageUtil.loadImageResource(PLUGIN_CLASS, "/com/extendedhitsplats/hitsplats/alt_charge_hitsplat.png"));
     public static final ImageIcon ALT_UNCHARGE_HITSPLAT = new ImageIcon(ImageUtil.loadImageResource(PLUGIN_CLASS, "/com/extendedhitsplats/hitsplats/alt_uncharge_hitsplat.png"));
     public static final ImageIcon CORRUPTION_HITSPLAT = new ImageIcon(ImageUtil.loadImageResource(PLUGIN_CLASS, "/com/extendedhitsplats/hitsplats/corruption_hitsplat.png"));

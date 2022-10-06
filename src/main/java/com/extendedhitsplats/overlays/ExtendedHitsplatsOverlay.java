@@ -94,11 +94,15 @@ public class ExtendedHitsplatsOverlay extends Overlay
                     }
                 }
 
-                if ((damage == 0) & (!config.showZero())){
+                if ((damage == 0) & (config.removeZeros())){
                     continue;
                 }
 
-                BufferedImage hitsplatImage = drawHitsplat(HitsplatID.DAMAGE_OTHER, damage);
+                if (config.hitsplat2010()){
+                    damage = damage * 10;
+                }
+
+                BufferedImage hitsplatImage = drawHitsplat(-1, damage, FontManager.getRunescapeBoldFont());
                 Point cPoint = actor.getCanvasImageLocation(hitsplatImage, actor.getLogicalHeight()/2);
 
                 if (cPoint == null){
@@ -121,12 +125,16 @@ public class ExtendedHitsplatsOverlay extends Overlay
                     continue;
                 }
 
-                if ((damage == 0) & (!config.showZero())){
+                if ((damage == 0) & (config.removeZeros())){
                     missOffset += 1;
                     continue;
                 }
 
-                BufferedImage hitsplatImage = drawHitsplat(hitsplatType, damage);
+                if (config.hitsplat2010()){
+                    damage = damage * 10;
+                }
+
+                BufferedImage hitsplatImage = drawHitsplat(hitsplatType, damage, FontManager.getRunescapeSmallFont());
                 Point cPoint = actor.getCanvasImageLocation(hitsplatImage, actor.getLogicalHeight()/2);
 
                 if (cPoint == null){
@@ -141,7 +149,7 @@ public class ExtendedHitsplatsOverlay extends Overlay
         return null;
     }
 
-    private BufferedImage drawHitsplat(int hitsplat_type, int damage){
+    private BufferedImage drawHitsplat(int hitsplat_type, int damage, Font font){
         ImageIcon hitIcon;
         switch (hitsplat_type){
             case HitsplatID.POISON:
@@ -208,12 +216,15 @@ public class ExtendedHitsplatsOverlay extends Overlay
             case 0:
                 hitIcon = Icons.CORRUPTION_HITSPLAT;
                 break;
+            case -1:
+                hitIcon = Icons.BIG_HITSPLAT;
+                break;
             default:
                 hitIcon = Icons.OTHER_POISE_HITSPLAT;
         }
         BufferedImage bi = iconToBuffered(hitIcon);
         Graphics g = bi.getGraphics();
-        bi = drawCenteredDamageNumbers(g, String.valueOf(damage), bi, FontManager.getRunescapeSmallFont());
+        bi = drawCenteredDamageNumbers(g, String.valueOf(damage), bi, font);
         g.dispose();
         return bi;
     }
