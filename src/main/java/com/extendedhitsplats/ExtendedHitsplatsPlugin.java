@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2018-2022, Lotto, Adam, alexanderhenne, Nightfirecat <https://github.com/devLotto> [shouldDraw & EntityHider]
  * Copyright (c) 2022, Ferrariic <ferrariictweet@gmail.com>
  * All rights reserved.
  *
@@ -27,20 +28,24 @@
 package com.extendedhitsplats;
 
 import com.extendedhitsplats.overlays.ExtendedHitsplatsOverlay;
+import com.extendedhitsplats.overlays.ExtendedHitsplatsRedrawUIOverlay;
 import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Client;
-import net.runelite.api.events.ClientTick;
+import net.runelite.api.*;
+import net.runelite.api.events.GameTick;
 import net.runelite.api.events.HitsplatApplied;
+import net.runelite.api.events.OverheadTextChanged;
+import net.runelite.client.callback.Hooks;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.game.NpcUtil;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 @PluginDescriptor(
@@ -50,30 +55,36 @@ public class ExtendedHitsplatsPlugin extends Plugin
 {
 	@Inject
 	private Client client;
-
 	@Inject
 	private ExtendedHitsplatsConfig config;
-
 	@Inject
 	private OverlayManager overlayManager;
-
 	@Inject
 	private ExtendedHitsplatsOverlay overlay;
-
-	public static List<HitsplatApplied> appliedHitsplatList = new ArrayList<>();
-
+	@Inject
+	private ExtendedHitsplatsRedrawUIOverlay redrawUIOverlay;
+	@Inject
+	private Hooks hooks;
+	@Inject
+	private NpcUtil npcUtil;
+	public static List<HitsplatApplied> appliedHitsplatList = new CopyOnWriteArrayList<>();
+	private final Hooks.RenderableDrawListener drawListener = this::shouldDraw;
 
 	@Override
 	protected void startUp() throws Exception
 	{
+		overlayManager.add(redrawUIOverlay);
 		overlayManager.add(overlay);
+		hooks.registerRenderableDrawListener(drawListener);
 		log.info("Extended Hitsplats started!");
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
+		overlayManager.remove(redrawUIOverlay);
 		overlayManager.remove(overlay);
+		hooks.unregisterRenderableDrawListener(drawListener);
 		log.info("Extended Hitsplats stopped!");
 	}
 
@@ -82,9 +93,10 @@ public class ExtendedHitsplatsPlugin extends Plugin
 		appliedHitsplatList.add(hitsplatApplied);
 	}
 
+
 	@Subscribe
-	public void onClientTick(ClientTick clientTick){
-		int gameCycle = client.getGameCycle();
+	public void onGameTick(GameTick gameTick){
+		int clientGameCycle = client.getGameCycle();
 		if (appliedHitsplatList == null){
 			return;
 		}
@@ -93,10 +105,131 @@ public class ExtendedHitsplatsPlugin extends Plugin
 		}
 		for (HitsplatApplied hitsplatApplied : appliedHitsplatList){
 			int disappear = hitsplatApplied.getHitsplat().getDisappearsOnGameCycle();
-			if (gameCycle > disappear + 150){
+			if (clientGameCycle > disappear + 50){ // delays by 2 ticks to prevent hitsplats from being cleared, atm getDisappearsOnGameCycle is the creation time of the Hitsplat
 				appliedHitsplatList.remove(hitsplatApplied);
 			}
 		}
+	}
+
+	//  * Copyright (c) 2018-2022, Adam, alexanderhenne, Nightfirecat for shouldDraw
+	boolean shouldDraw(Renderable renderable, boolean drawingUI)
+	{
+		// hardcoded values from 2022, Ferrariic <ferrariictweet@gmail.com>
+		boolean hideOthers = false;
+		boolean hideOthers2D = true;
+
+		boolean hideFriends = false;
+		boolean hideFriendsChatMembers = false;
+		boolean hideClanMembers  = false;
+		boolean hideIgnoredPlayers = false;
+
+		boolean hideLocalPlayer = false;
+		boolean hideLocalPlayer2D = true;
+
+		boolean hideNPCs = false;
+		boolean hideNPCs2D = true;
+		boolean hideDeadNpcs = false;
+
+		boolean hidePets = false;
+		boolean hideAttackers = false;
+		boolean hideProjectiles = false;
+
+		if (renderable instanceof Player)
+		{
+			Player player = (Player) renderable;
+			Player local = client.getLocalPlayer();
+
+			if (player.getName() == null)
+			{
+				// player.isFriend() and player.isFriendsChatMember() npe when the player has a null name
+				return true;
+			}
+
+			// Allow hiding local self in pvp, which is an established meta.
+			// It is more advantageous than renderself due to being able to still render local player 2d
+			if (player == local)
+			{
+				return !(drawingUI ? hideLocalPlayer2D : hideLocalPlayer);
+			}
+
+			if (hideAttackers && player.getInteracting() == local)
+			{
+				return false; // hide
+			}
+
+			if (player.isFriend())
+			{
+				return !hideFriends;
+			}
+			if (player.isFriendsChatMember())
+			{
+				return !hideFriendsChatMembers;
+			}
+			if (player.isClanMember())
+			{
+				return !hideClanMembers;
+			}
+			if (client.getIgnoreContainer().findByName(player.getName()) != null)
+			{
+				return !hideIgnoredPlayers;
+			}
+
+			return !(drawingUI ? hideOthers2D : hideOthers);
+		}
+		else if (renderable instanceof NPC)
+		{
+			NPC npc = (NPC) renderable;
+
+			if (npc.getComposition().isFollower() && npc != client.getFollower())
+			{
+				return !hidePets;
+			}
+
+			// dead npcs can also be interacting so prioritize it over the interacting check
+			if (npcUtil.isDying(npc) && hideDeadNpcs)
+			{
+				return false;
+			}
+
+			if (npc.getInteracting() == client.getLocalPlayer())
+			{
+				boolean b = hideAttackers;
+				// Kludge to make hide attackers only affect 2d or 3d if the 2d or 3d hide is on
+				// This allows hiding 2d for all npcs, including attackers.
+				if (hideNPCs2D || hideNPCs)
+				{
+					b &= drawingUI ? hideNPCs2D : hideNPCs;
+				}
+				return !b;
+			}
+
+			return !(drawingUI ? hideNPCs2D : hideNPCs);
+		}
+		else if (renderable instanceof Projectile)
+		{
+			return !hideProjectiles;
+		}
+		else if (renderable instanceof GraphicsObject)
+		{
+			if (!hideDeadNpcs)
+			{
+				return true;
+			}
+
+			switch (((GraphicsObject) renderable).getId())
+			{
+				case GraphicID.MELEE_NYLO_DEATH:
+				case GraphicID.RANGE_NYLO_DEATH:
+				case GraphicID.MAGE_NYLO_DEATH:
+				case GraphicID.MELEE_NYLO_EXPLOSION:
+				case GraphicID.RANGE_NYLO_EXPLOSION:
+				case GraphicID.MAGE_NYLO_EXPLOSION:
+					return false;
+				default:
+					return true;
+			}
+		}
+		return true;
 	}
 
 	@Provides

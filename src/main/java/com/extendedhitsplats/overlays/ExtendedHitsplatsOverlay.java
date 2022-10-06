@@ -89,7 +89,9 @@ public class ExtendedHitsplatsOverlay extends Overlay
             if (config.bigHitsplat()){
                 int damage = 0;
                 for (Hitsplat hitsplat : hitsplats){
-                    damage += hitsplat.getAmount();
+                    if (hitsplat.getHitsplatType() != HitsplatID.HEAL){
+                        damage += hitsplat.getAmount();
+                    }
                 }
 
                 if ((damage == 0) & (!config.showZero())){
@@ -104,7 +106,6 @@ public class ExtendedHitsplatsOverlay extends Overlay
                 }
 
                 Point p = new Point(cPoint.getX()+1, cPoint.getY()-1);
-                Point k = SplatPoints.splatPoints.get(0);
                 OverlayUtil.renderImageLocation(graphics, new Point(p.getX(), p.getY()), hitsplatImage);
                 continue;
             }
