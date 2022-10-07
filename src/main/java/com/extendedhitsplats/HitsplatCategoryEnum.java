@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum HitsplatCategoryEnum {
-    None,
-    SingleNormal,
-    SingleBig,
+    Every_Hitsplat,
+    Single_Normal,
+    Single_BIG,
 }

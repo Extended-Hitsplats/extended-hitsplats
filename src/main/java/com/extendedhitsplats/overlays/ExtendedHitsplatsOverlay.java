@@ -87,11 +87,11 @@ public class ExtendedHitsplatsOverlay extends Overlay
 
             HitsplatCategoryEnum hitsplatCategoryEnumConfig = config.hitsplatCategoryEnum();
             switch (hitsplatCategoryEnumConfig){
-                case None:
+                case Every_Hitsplat:
                     drawExtendedHitsplats(graphics, actor, hitsplats);
                     break;
-                case SingleNormal:
-                case SingleBig:
+                case Single_Normal:
+                case Single_BIG:
                     drawSingleHitsplat(graphics, actor, hitsplats, hitsplatCategoryEnumConfig);
                     break;
                 }
@@ -154,11 +154,11 @@ public class ExtendedHitsplatsOverlay extends Overlay
         int hitsplatType = HitsplatID.DAMAGE_MAX_ME;;
         Font font = FontManager.getRunescapeSmallFont();
         switch (hitsplatCategoryEnum){
-            case SingleNormal:
+            case Single_Normal:
                 hitsplatType = HitsplatID.DAMAGE_MAX_ME;
                 font = FontManager.getRunescapeSmallFont();
                 break;
-            case SingleBig:
+            case Single_BIG:
                 hitsplatType = -1;
                 font = FontManager.getRunescapeBoldFont();
                 break;

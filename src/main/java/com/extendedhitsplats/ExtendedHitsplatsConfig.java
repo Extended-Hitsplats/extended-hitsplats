@@ -23,7 +23,7 @@ public interface ExtendedHitsplatsConfig extends Config
 			name = "Hitsplat Type",
 			description = "The type of hitsplat you would like to see in-game."
 	)
-	default HitsplatCategoryEnum hitsplatCategoryEnum(){return HitsplatCategoryEnum.None;}
+	default HitsplatCategoryEnum hitsplatCategoryEnum(){return HitsplatCategoryEnum.Every_Hitsplat;}
 
 	@ConfigItem(
 			position = 3,
