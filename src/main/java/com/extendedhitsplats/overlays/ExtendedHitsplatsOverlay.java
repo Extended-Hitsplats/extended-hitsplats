@@ -108,6 +108,11 @@ public class ExtendedHitsplatsOverlay extends Overlay
             int damage = hitsplat.getAmount();
             int hitsplatType = hitsplat.getHitsplatType();
 
+            if (position < 4){
+                // just skip the first 3
+                continue;
+            }
+
             if (position >= config.maxHitsplats()){
                 continue;
             }
