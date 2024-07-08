@@ -27,8 +27,11 @@
 package com.extendedhitsplats;
 
 import com.extendedhitsplats.overlays.ExtendedHitsplatsOverlay;
+import com.extendedhitsplats.utils.HitsplatManager;
+import com.extendedhitsplats.utils.ManagedHitsplat;
 import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.Actor;
 import net.runelite.api.Client;
 import net.runelite.api.Hitsplat;
 import net.runelite.api.events.GameTick;
@@ -40,7 +43,9 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
@@ -57,7 +62,7 @@ public class ExtendedHitsplatsPlugin extends Plugin
 	private OverlayManager overlayManager;
 	@Inject
 	private ExtendedHitsplatsOverlay overlay;
-	public static List<HitsplatApplied> appliedHitsplatList = new CopyOnWriteArrayList<>();
+	public static HitsplatManager hitsplatManager = new HitsplatManager();
 
 	@Override
 	protected void startUp() throws Exception
@@ -76,23 +81,39 @@ public class ExtendedHitsplatsPlugin extends Plugin
 	@Subscribe
 	public void onHitsplatApplied(HitsplatApplied hitsplatApplied){
 		Hitsplat hitsplat = hitsplatApplied.getHitsplat();
-		appliedHitsplatList.add(hitsplatApplied);
+		for (ManagedHitsplat managedHitsplat : HitsplatManager.hitsplatList.get(hitsplatApplied.getActor())) {
+			if (managedHitsplat.hitsplat.equals(hitsplat)) {
+				return;
+			}
+		}
+		hitsplatManager.add(hitsplatApplied);
 	}
 
 	@Subscribe
 	public void onGameTick(GameTick gameTick){
 		int clientGameCycle = client.getGameCycle();
-		if (appliedHitsplatList == null){
+		if (hitsplatManager == null){
 			return;
 		}
-		if (appliedHitsplatList.size() == 0){
+		if (HitsplatManager.hitsplatList.isEmpty()){
 			return;
 		}
-		for (HitsplatApplied hitsplatApplied : appliedHitsplatList){
-			int disappear = hitsplatApplied.getHitsplat().getDisappearsOnGameCycle();
-			if (clientGameCycle > disappear){
-				appliedHitsplatList.remove(hitsplatApplied);
+		List<Actor> toRemove = new ArrayList<>();
+
+		for (Map.Entry<Actor, CopyOnWriteArrayList<ManagedHitsplat>> entry : HitsplatManager.hitsplatList.entrySet()){
+			for (ManagedHitsplat managedHitsplat : entry.getValue()) {
+				int disappear = managedHitsplat.hitsplat.getDisappearsOnGameCycle();
+				if (clientGameCycle > disappear){
+					entry.getValue().remove(managedHitsplat);
+				}
 			}
+			if (entry.getValue().isEmpty()) {
+				toRemove.add(entry.getKey());
+			}
+		}
+
+		for (Actor actor : toRemove) {
+			HitsplatManager.hitsplatList.remove(actor);
 		}
 	}
 

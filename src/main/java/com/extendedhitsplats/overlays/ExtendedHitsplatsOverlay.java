@@ -29,7 +29,9 @@ import com.extendedhitsplats.ExtendedHitsplatsConfig;
 import com.extendedhitsplats.ExtendedHitsplatsPlugin;
 import com.extendedhitsplats.HitsplatCategoryEnum;
 import com.extendedhitsplats.points.SplatPoints;
+import com.extendedhitsplats.utils.HitsplatManager;
 import com.extendedhitsplats.utils.Icons;
+import com.extendedhitsplats.utils.ManagedHitsplat;
 import net.runelite.api.*;
 import net.runelite.api.Point;
 import net.runelite.api.events.HitsplatApplied;
@@ -42,6 +44,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ExtendedHitsplatsOverlay extends Overlay
 {
@@ -63,56 +66,41 @@ public class ExtendedHitsplatsOverlay extends Overlay
     @Override
     public Dimension render(Graphics2D graphics)
     {
-        List<HitsplatApplied> hitsplatAppliedList = ExtendedHitsplatsPlugin.appliedHitsplatList;
-        if (hitsplatAppliedList.size() == 0){
+        if (HitsplatManager.hitsplatList.isEmpty()){
             return null;
         }
 
-        Map<Actor, ArrayList<Hitsplat>> actorListMap = new HashMap<>();
-        // organize hitsplats to occur under their respective actors
-        for (HitsplatApplied hitsplatApplied : hitsplatAppliedList){
-            Hitsplat hitsplat = hitsplatApplied.getHitsplat();
-            Actor actor = hitsplatApplied.getActor();
-            if (actorListMap.containsKey(actor)){
-                ArrayList<Hitsplat> temp = actorListMap.get(actor);
-                temp.add(hitsplat);
-                actorListMap.put(actor, temp);
-            } else {
-                actorListMap.put(actor, new ArrayList<>(Arrays.asList(hitsplat)));
-            }
-        }
-
-        for (Actor actor : actorListMap.keySet()){
-            ArrayList<Hitsplat> hitsplats = actorListMap.get(actor);
-
-            HitsplatCategoryEnum hitsplatCategoryEnumConfig = config.hitsplatCategoryEnum();
-            switch (hitsplatCategoryEnumConfig){
-                case Every_Hitsplat:
-                    drawExtendedHitsplats(graphics, actor, hitsplats);
-                    break;
-                case Single_Normal:
-                case Single_BIG:
-                    drawSingleHitsplat(graphics, actor, hitsplats, hitsplatCategoryEnumConfig);
-                    break;
+        for (Map.Entry<Actor, CopyOnWriteArrayList<ManagedHitsplat>> entry : HitsplatManager.hitsplatList.entrySet()){
+            for (ManagedHitsplat managedHitsplat : entry.getValue()) {
+                HitsplatCategoryEnum hitsplatCategoryEnumConfig = config.hitsplatCategoryEnum();
+                switch (hitsplatCategoryEnumConfig){
+                    case Every_Hitsplat:
+                        drawExtendedHitsplats(graphics, entry.getKey(), entry.getValue());
+                        break;
+                    case Single_Normal:
+                    case Single_BIG:
+                        drawSingleHitsplat(graphics, entry.getKey(), entry.getValue(), hitsplatCategoryEnumConfig);
+                        break;
                 }
+            }
         }
         return null;
     }
 
-    private void drawExtendedHitsplats(Graphics2D graphics, Actor actor, List<Hitsplat> hitsplats){
+    private void drawExtendedHitsplats(Graphics2D graphics, Actor actor, List<ManagedHitsplat> hitsplats){
         // normal hitsplat construction
         int missOffset = 0;
-        for (Hitsplat hitsplat : hitsplats){
-            int idx = hitsplats.indexOf(hitsplat);
-            int position = idx-missOffset;
+        for (ManagedHitsplat managedHitsplat : hitsplats) {
+            Hitsplat hitsplat = managedHitsplat.hitsplat;
+            int position = managedHitsplat.position;
             int damage = hitsplat.getAmount();
             int hitsplatType = hitsplat.getHitsplatType();
 
-            if (position >= config.maxHitsplats()){
+            if (position >= config.maxHitsplats()) {
                 continue;
             }
 
-            if ((damage == 0) & (config.removeZeros())){
+            if ((damage == 0) & (config.removeZeros())) {
                 missOffset += 1;
                 continue;
             }
@@ -134,12 +122,12 @@ public class ExtendedHitsplatsOverlay extends Overlay
         }
     }
 
-    private void drawSingleHitsplat(Graphics2D graphics, Actor actor, List<Hitsplat> hitsplats, HitsplatCategoryEnum hitsplatCategoryEnum){
+    private void drawSingleHitsplat(Graphics2D graphics, Actor actor, List<ManagedHitsplat> hitsplats, HitsplatCategoryEnum hitsplatCategoryEnum){
         // makes one big hitsplat with the cumulative amount of tick damage per actor
         int damage = 0;
-        for (Hitsplat hitsplat : hitsplats){
-            if (hitsplat.getHitsplatType() != HitsplatID.HEAL){
-                damage += hitsplat.getAmount();
+        for (ManagedHitsplat managedHitsplat : hitsplats) {
+            if (managedHitsplat.hitsplat.getHitsplatType() != HitsplatID.HEAL){
+                damage += managedHitsplat.hitsplat.getAmount();
             }
         }
 
@@ -282,7 +270,7 @@ public class ExtendedHitsplatsOverlay extends Overlay
                 hitIcon = Icons.OSRS_BIG_HITSPLAT;
                 break;
             default:
-                hitIcon = Icons.OSRS_OTHER_POISE_HITSPLAT;
+                return new BufferedImage(0,0,0);
         }
         BufferedImage bi = iconToBuffered(hitIcon);
         Graphics g = bi.getGraphics();
