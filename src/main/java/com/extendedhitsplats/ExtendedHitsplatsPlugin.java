@@ -68,14 +68,12 @@ public class ExtendedHitsplatsPlugin extends Plugin
 	protected void startUp() throws Exception
 	{
 		overlayManager.add(overlay);
-		log.info("Extended Hitsplats started!");
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
 		overlayManager.remove(overlay);
-		log.info("Extended Hitsplats stopped!");
 	}
 
 	@Subscribe
