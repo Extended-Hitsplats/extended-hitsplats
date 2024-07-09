@@ -79,11 +79,6 @@ public class ExtendedHitsplatsPlugin extends Plugin
 	@Subscribe
 	public void onHitsplatApplied(HitsplatApplied hitsplatApplied){
 		Hitsplat hitsplat = hitsplatApplied.getHitsplat();
-		for (ManagedHitsplat managedHitsplat : HitsplatManager.hitsplatList.get(hitsplatApplied.getActor())) {
-			if (managedHitsplat.hitsplat.equals(hitsplat)) {
-				return;
-			}
-		}
 		hitsplatManager.add(hitsplatApplied);
 	}
 
