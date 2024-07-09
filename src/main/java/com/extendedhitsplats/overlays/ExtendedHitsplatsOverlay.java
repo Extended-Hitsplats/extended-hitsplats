@@ -56,8 +56,7 @@ public class ExtendedHitsplatsOverlay extends Overlay
     private ExtendedHitsplatsOverlay(ExtendedHitsplatsPlugin plugin, ExtendedHitsplatsConfig config, Client client)
     {
         setPosition(OverlayPosition.DYNAMIC);
-        setPriority(OverlayPriority.LOW);
-        setLayer(OverlayLayer.ABOVE_SCENE);
+        setLayer(OverlayLayer.UNDER_WIDGETS);
         this.plugin = plugin;
         this.config = config;
         this.client = client;
