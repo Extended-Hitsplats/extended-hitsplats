@@ -34,10 +34,13 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Actor;
 import net.runelite.api.Client;
 import net.runelite.api.Hitsplat;
+import net.runelite.api.SpriteID;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.HitsplatApplied;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.game.SpriteManager;
+import net.runelite.client.game.SpriteOverride;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
@@ -62,18 +65,39 @@ public class ExtendedHitsplatsPlugin extends Plugin
 	private OverlayManager overlayManager;
 	@Inject
 	private ExtendedHitsplatsOverlay overlay;
+	@Inject
+	private SpriteManager spriteManager;
 	public static HitsplatManager hitsplatManager = new HitsplatManager();
+	private SpriteOverride[] overrides = new SpriteOverride[Sprites.ALL_SPRITES.length];
 
 	@Override
 	protected void startUp() throws Exception
 	{
 		overlayManager.add(overlay);
+		if (overrides[0] == null) {
+			for (int i = 0; i < Sprites.ALL_SPRITES.length; i++) {
+				int id = Sprites.ALL_SPRITES[i];
+				overrides[i] = new SpriteOverride() {
+					@Override
+					public int getSpriteId() {
+						return id;
+					}
+
+					@Override
+					public String getFileName() {
+						return "/com/extendedhitsplats/hitsplats/osrs/blank.png";
+					}
+				};
+			}
+		}
+		spriteManager.addSpriteOverrides(overrides);
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
 		overlayManager.remove(overlay);
+		spriteManager.removeSpriteOverrides(overrides);
 	}
 
 	@Subscribe
