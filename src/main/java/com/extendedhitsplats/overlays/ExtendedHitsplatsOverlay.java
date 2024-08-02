@@ -70,17 +70,17 @@ public class ExtendedHitsplatsOverlay extends Overlay
         }
 
         for (Map.Entry<Actor, CopyOnWriteArrayList<ManagedHitsplat>> entry : HitsplatManager.hitsplatList.entrySet()){
-            for (ManagedHitsplat managedHitsplat : entry.getValue()) {
-                HitsplatCategoryEnum hitsplatCategoryEnumConfig = config.hitsplatCategoryEnum();
-                switch (hitsplatCategoryEnumConfig){
-                    case Every_Hitsplat:
-                        drawExtendedHitsplats(graphics, entry.getKey(), entry.getValue());
-                        break;
-                    case Single_Normal:
-                    case Single_BIG:
-                        drawSingleHitsplat(graphics, entry.getKey(), entry.getValue(), hitsplatCategoryEnumConfig);
-                        break;
-                }
+            HitsplatCategoryEnum hitsplatCategoryEnumConfig = config.hitsplatCategoryEnum();
+            Actor actor = entry.getKey();
+            CopyOnWriteArrayList<ManagedHitsplat> hitsplats = entry.getValue();
+            switch (hitsplatCategoryEnumConfig){
+                case Every_Hitsplat:
+                    drawExtendedHitsplats(graphics, actor, hitsplats);
+                    break;
+                case Single_Normal:
+                case Single_BIG:
+                    drawSingleHitsplat(graphics, actor, hitsplats, hitsplatCategoryEnumConfig);
+                    break;
             }
         }
         return null;
@@ -90,8 +90,8 @@ public class ExtendedHitsplatsOverlay extends Overlay
         // normal hitsplat construction
         int missOffset = 0;
         for (ManagedHitsplat managedHitsplat : hitsplats) {
-            Hitsplat hitsplat = managedHitsplat.hitsplat;
             int position = managedHitsplat.position;
+            Hitsplat hitsplat = managedHitsplat.hitsplat;
             int damage = hitsplat.getAmount();
             int hitsplatType = hitsplat.getHitsplatType();
 
@@ -108,7 +108,7 @@ public class ExtendedHitsplatsOverlay extends Overlay
                 damage = damage * 10;
             }
 
-            BufferedImage hitsplatImage = drawHitsplat(hitsplatType, damage, FontManager.getRunescapeSmallFont());
+            BufferedImage hitsplatImage = drawHitsplat(hitsplatType, damage, FontManager.getRunescapeSmallFont(), position);
             Point cPoint = actor.getCanvasImageLocation(hitsplatImage, actor.getLogicalHeight()/2);
 
             if (cPoint == null){
@@ -138,7 +138,7 @@ public class ExtendedHitsplatsOverlay extends Overlay
             damage = damage * 10;
         }
 
-        int hitsplatType = HitsplatID.DAMAGE_MAX_ME;;
+        int hitsplatType = HitsplatID.DAMAGE_MAX_ME;
         Font font = FontManager.getRunescapeSmallFont();
         switch (hitsplatCategoryEnum){
             case Single_Normal:
@@ -151,7 +151,7 @@ public class ExtendedHitsplatsOverlay extends Overlay
                 break;
         }
 
-        BufferedImage hitsplatImage = drawHitsplat(hitsplatType, damage, font);
+        BufferedImage hitsplatImage = drawHitsplat(hitsplatType, damage, font, 0);
         Point cPoint = actor.getCanvasImageLocation(hitsplatImage, actor.getLogicalHeight()/2);
 
         if (cPoint == null){
@@ -162,7 +162,7 @@ public class ExtendedHitsplatsOverlay extends Overlay
         OverlayUtil.renderImageLocation(graphics, new Point(p.getX(), p.getY()), hitsplatImage);
     }
 
-    private BufferedImage drawHitsplat(int hitsplat_type, int damage, Font font){
+    private BufferedImage drawHitsplat(int hitsplat_type, int damage, Font font, int position){
         ImageIcon hitIcon;
         switch (hitsplat_type){
             case HitsplatID.BLEED:

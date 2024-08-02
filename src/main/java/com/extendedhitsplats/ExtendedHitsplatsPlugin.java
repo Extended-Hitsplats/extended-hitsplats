@@ -34,7 +34,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Actor;
 import net.runelite.api.Client;
 import net.runelite.api.Hitsplat;
-import net.runelite.api.SpriteID;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.HitsplatApplied;
 import net.runelite.client.config.ConfigManager;
@@ -67,8 +66,8 @@ public class ExtendedHitsplatsPlugin extends Plugin
 	private ExtendedHitsplatsOverlay overlay;
 	@Inject
 	private SpriteManager spriteManager;
-	public static HitsplatManager hitsplatManager = new HitsplatManager();
-	private SpriteOverride[] overrides = new SpriteOverride[Sprites.ALL_SPRITES.length];
+	private final SpriteOverride[] overrides = new SpriteOverride[Sprites.ALL_SPRITES.length];
+	private int debug = 0;
 
 	@Override
 	protected void startUp() throws Exception
@@ -102,35 +101,36 @@ public class ExtendedHitsplatsPlugin extends Plugin
 
 	@Subscribe
 	public void onHitsplatApplied(HitsplatApplied hitsplatApplied){
-		Hitsplat hitsplat = hitsplatApplied.getHitsplat();
-		hitsplatManager.add(hitsplatApplied);
+		HitsplatManager.add(hitsplatApplied);
 	}
 
 	@Subscribe
 	public void onGameTick(GameTick gameTick){
 		int clientGameCycle = client.getGameCycle();
-		if (hitsplatManager == null){
-			return;
-		}
 		if (HitsplatManager.hitsplatList.isEmpty()){
 			return;
 		}
-		List<Actor> toRemove = new ArrayList<>();
 
-		for (Map.Entry<Actor, CopyOnWriteArrayList<ManagedHitsplat>> entry : HitsplatManager.hitsplatList.entrySet()){
+		List<Actor> toRemoveActors = new ArrayList<>();
+		List<ManagedHitsplat> toRemoveSplats = new ArrayList<>();
+		for (Map.Entry<Actor, CopyOnWriteArrayList<ManagedHitsplat>> entry: HitsplatManager.hitsplatList.entrySet()) {
+			Actor actor = entry.getKey();
 			for (ManagedHitsplat managedHitsplat : entry.getValue()) {
 				int disappear = managedHitsplat.hitsplat.getDisappearsOnGameCycle();
-				if (clientGameCycle > disappear){
-					entry.getValue().remove(managedHitsplat);
+				if (clientGameCycle > disappear) {
+					toRemoveSplats.add(managedHitsplat);
+					HitsplatManager.releasePosition(actor, managedHitsplat.position);
 				}
 			}
-			if (entry.getValue().isEmpty()) {
-				toRemove.add(entry.getKey());
+			if (HitsplatManager.hitsplatList.get(actor).isEmpty()) {
+				toRemoveActors.add(actor);
 			}
+			HitsplatManager.hitsplatList.get(actor).removeAll(toRemoveSplats);
 		}
 
-		for (Actor actor : toRemove) {
+		for (Actor actor : toRemoveActors) {
 			HitsplatManager.hitsplatList.remove(actor);
+			HitsplatManager.takenPositions.remove(actor);
 		}
 	}
 
